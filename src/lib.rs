@@ -8,6 +8,7 @@ use rocket::request::{self, Request, FromRequest};
 use rocket::http::hyper::header::EntityTag;
 
 /// The request guard used for getting `if-none-match` header.
+#[derive(Clone)]
 pub struct EtagIfNoneMatch {
     pub etag: Option<EntityTag>,
 }
