@@ -1,6 +1,6 @@
 [package]
 name = "rocket-etag-if-none-match"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Magic Len <len@magiclen.org>"]
 repository = "https://github.com/magiclen/rocket-etag-if-none-match"
 homepage = "https://magiclen.org/rocket-etag-if-none-match"
@@ -10,5 +10,12 @@ description= "This crate provides a request guard used for getting `if-none-matc
 readme = "README.md"
 license = "MIT"
 
+[badges]
+travis-ci = { repository = "magiclen/rocket-etag-if-none-match", branch = "master" }
+
 [dependencies]
-rocket = "0.3.16"
+rocket = ">=0.3.16"
+
+[dev-dependencies]
+rocket_codegen = ">=0.3.16"
+lazy_static = "1.2.0"
