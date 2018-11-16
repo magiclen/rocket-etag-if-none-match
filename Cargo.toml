@@ -18,4 +18,5 @@ rocket = ">=0.3.16"
 
 [dev-dependencies]
 rocket_codegen = ">=0.3.16"
+chrono = "0.4.6"
 lazy_static = "1.2.0"

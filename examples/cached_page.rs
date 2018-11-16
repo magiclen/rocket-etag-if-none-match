@@ -5,6 +5,8 @@ extern crate rocket;
 
 extern crate rocket_etag_if_none_match;
 
+extern crate chrono;
+
 #[macro_use]
 extern crate lazy_static;
 
@@ -15,6 +17,8 @@ use rocket_etag_if_none_match::{EtagIfNoneMatch, EntityTag};
 use rocket::response::{Result, Response};
 use rocket::http::Status;
 use rocket::http::hyper::header::ETag;
+
+use chrono::prelude::*;
 
 lazy_static! {
     static ref MY_ETAG: EntityTag = {
@@ -28,7 +32,10 @@ fn index(etag_if_none_match: EtagIfNoneMatch) -> Result<'static> {
         println!("Cached!");
         Response::build().status(Status::NotModified).ok()
     } else {
-        Response::build().header(ETag(MY_ETAG.clone())).sized_body(Cursor::new("Hello!")).ok()
+        Response::build().header(ETag(MY_ETAG.clone()))
+            .raw_header("Content-Type", "text/plain; charset=utf-8")
+            .sized_body(Cursor::new(format!("Current Time: {}\n\nTry to re-open this page repeatedly without pressing the forced-refresh(Ctrl+F5) button.", Utc::now().to_rfc3339())))
+            .ok()
     }
 }
 
