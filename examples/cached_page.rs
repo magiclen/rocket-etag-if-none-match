@@ -27,7 +27,7 @@ lazy_static! {
 }
 
 #[get("/")]
-fn index(etag_if_none_match: EtagIfNoneMatch) -> Result<'static> {
+fn index(etag_if_none_match: &EtagIfNoneMatch) -> Result<'static> {
     if etag_if_none_match.weak_eq(&MY_ETAG) {
         println!("Cached!");
         Response::build().status(Status::NotModified).ok()

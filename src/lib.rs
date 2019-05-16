@@ -18,31 +18,47 @@ pub struct EtagIfNoneMatch {
     pub etag: Option<EntityTag>,
 }
 
+macro_rules! impl_request_guard {
+    ($request:ident) => {
+        {
+            let raw_etag: Option<&str> = $request.headers().get("if-none-match").next(); // Only fetch the first one.
+
+            match raw_etag {
+                Some(raw_etag) => match raw_etag.parse::<EntityTag>() {
+                    Ok(etag) => {
+                        EtagIfNoneMatch {
+                            etag: Some(etag)
+                        }
+                    }
+                    Err(_) => {
+                        EtagIfNoneMatch {
+                            etag: None
+                        }
+                    }
+                }
+                None => {
+                    EtagIfNoneMatch {
+                        etag: None
+                    }
+                }
+            }
+        }
+    }
+}
+
 impl<'a, 'r> FromRequest<'a, 'r> for EtagIfNoneMatch {
     type Error = ();
 
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<EtagIfNoneMatch, ()> {
-        let raw_etag: Option<&str> = request.headers().get("if-none-match").next(); // Only fetch the first one.
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, Self::Error> {
+        Outcome::Success(impl_request_guard!(request))
+    }
+}
 
-        match raw_etag {
-            Some(raw_etag) => match raw_etag.parse::<EntityTag>() {
-                Ok(etag) => {
-                    Outcome::Success(EtagIfNoneMatch {
-                        etag: Some(etag)
-                    })
-                }
-                Err(_) => {
-                    Outcome::Success(EtagIfNoneMatch {
-                        etag: None
-                    })
-                }
-            }
-            None => {
-                Outcome::Success(EtagIfNoneMatch {
-                    etag: None
-                })
-            }
-        }
+impl<'a, 'r> FromRequest<'a, 'r> for &'a EtagIfNoneMatch {
+    type Error = ();
+
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, Self::Error> {
+        Outcome::Success(request.local_cache(|| impl_request_guard!(request)))
     }
 }
 
