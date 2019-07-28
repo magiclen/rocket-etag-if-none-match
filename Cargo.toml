@@ -10,8 +10,9 @@ description= "This crate provides a request guard used for getting `if-none-matc
 readme = "README.md"
 license = "MIT"
 
-[badges]
-travis-ci = { repository = "magiclen/rocket-etag-if-none-match", branch = "master" }
+[badges.travis-ci]
+repository = "magiclen/rocket-etag-if-none-match"
+branch = "master"
 
 [dependencies]
 rocket = "0.4"
