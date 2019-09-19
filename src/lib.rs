@@ -8,9 +8,9 @@ See `examples`.
 
 extern crate rocket;
 
-use rocket::Outcome;
-use rocket::request::{self, Request, FromRequest};
 pub use rocket::http::hyper::header::EntityTag;
+use rocket::request::{self, FromRequest, Request};
+use rocket::Outcome;
 
 /// The request guard used for getting `if-none-match` header.
 #[derive(Debug, Clone)]
@@ -66,24 +66,16 @@ impl EtagIfNoneMatch {
     /// For weak comparison two entity-tags are equivalent if their opaque-tags match character-by-character, regardless of either or both being tagged as "weak".
     pub fn weak_eq(&self, other_etag: &EntityTag) -> bool {
         match &self.etag {
-            Some(etag) => {
-                etag.weak_eq(other_etag)
-            }
-            None => {
-                false
-            }
+            Some(etag) => etag.weak_eq(other_etag),
+            None => false,
         }
     }
 
     /// For strong comparison two entity-tags are equivalent if both are not weak and their opaque-tags match character-by-character.
     pub fn strong_eq(&self, other_etag: &EntityTag) -> bool {
         match &self.etag {
-            Some(etag) => {
-                etag.strong_eq(other_etag)
-            }
-            None => {
-                false
-            }
+            Some(etag) => etag.strong_eq(other_etag),
+            None => false,
         }
     }
 }

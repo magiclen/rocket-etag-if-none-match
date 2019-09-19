@@ -12,18 +12,16 @@ extern crate lazy_static;
 
 use std::io::Cursor;
 
-use rocket_etag_if_none_match::{EtagIfNoneMatch, EntityTag};
+use rocket_etag_if_none_match::{EntityTag, EtagIfNoneMatch};
 
-use rocket::response::{Result, Response};
-use rocket::http::Status;
 use rocket::http::hyper::header::ETag;
+use rocket::http::Status;
+use rocket::response::{Response, Result};
 
 use chrono::prelude::*;
 
 lazy_static! {
-    static ref MY_ETAG: EntityTag = {
-        EntityTag::new(true, "MAGIC".to_string())
-    };
+    static ref MY_ETAG: EntityTag = { EntityTag::new(true, "MAGIC".to_string()) };
 }
 
 #[get("/")]
