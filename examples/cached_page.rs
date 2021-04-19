@@ -1,5 +1,3 @@
-#![feature(proc_macro_hygiene, decl_macro)]
-
 #[macro_use]
 extern crate rocket;
 
@@ -7,22 +5,20 @@ extern crate rocket_etag_if_none_match;
 
 extern crate chrono;
 
-#[macro_use]
-extern crate lazy_static;
+extern crate once_cell;
 
 use std::io::Cursor;
 
-use rocket_etag_if_none_match::{EntityTag, EtagIfNoneMatch};
+use rocket_etag_if_none_match::{etag::EntityTag, EtagIfNoneMatch};
 
-use rocket::http::hyper::header::ETag;
 use rocket::http::Status;
 use rocket::response::{Response, Result};
 
+use once_cell::sync::Lazy;
+
 use chrono::prelude::*;
 
-lazy_static! {
-    static ref MY_ETAG: EntityTag = { EntityTag::new(true, "MAGIC".to_string()) };
-}
+static MY_ETAG: Lazy<EntityTag> = Lazy::new(|| EntityTag::new(true, "MAGIC"));
 
 #[get("/")]
 fn index(etag_if_none_match: &EtagIfNoneMatch) -> Result<'static> {
@@ -30,13 +26,19 @@ fn index(etag_if_none_match: &EtagIfNoneMatch) -> Result<'static> {
         println!("Cached!");
         Response::build().status(Status::NotModified).ok()
     } else {
-        Response::build().header(ETag(MY_ETAG.clone()))
+        let body = format!("Current Time: {}\n\nTry to re-open this page repeatedly without pressing the forced-refresh(Ctrl+F5) button.", Utc::now().to_rfc3339());
+
+        let size = body.len();
+
+        Response::build()
+            .raw_header("etag", MY_ETAG.to_string())
             .raw_header("Content-Type", "text/plain; charset=utf-8")
-            .sized_body(Cursor::new(format!("Current Time: {}\n\nTry to re-open this page repeatedly without pressing the forced-refresh(Ctrl+F5) button.", Utc::now().to_rfc3339())))
+            .sized_body(size, Cursor::new(body))
             .ok()
     }
 }
 
-fn main() {
-    rocket::ignite().mount("/", routes![index]).launch();
+#[launch]
+fn rocket() -> _ {
+    rocket::build().mount("/", routes![index])
 }

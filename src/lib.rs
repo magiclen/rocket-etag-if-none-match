@@ -8,9 +8,12 @@ See `examples`.
 
 extern crate rocket;
 
-pub use rocket::http::hyper::header::EntityTag;
+pub extern crate etag;
+
+use etag::EntityTag;
+
+use rocket::outcome::Outcome;
 use rocket::request::{self, FromRequest, Request};
-use rocket::Outcome;
 
 /// The request guard used for getting `if-none-match` header.
 #[derive(Debug, Clone)]
@@ -46,18 +49,20 @@ macro_rules! impl_request_guard {
     }
 }
 
-impl<'a, 'r> FromRequest<'a, 'r> for EtagIfNoneMatch {
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for EtagIfNoneMatch {
     type Error = ();
 
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, Self::Error> {
+    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
         Outcome::Success(impl_request_guard!(request))
     }
 }
 
-impl<'a, 'r> FromRequest<'a, 'r> for &'a EtagIfNoneMatch {
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for &'r EtagIfNoneMatch {
     type Error = ();
 
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, Self::Error> {
+    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
         Outcome::Success(request.local_cache(|| impl_request_guard!(request)))
     }
 }
