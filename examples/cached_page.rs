@@ -31,7 +31,7 @@ fn index(etag_if_none_match: &EtagIfNoneMatch) -> Result<'static> {
         let size = body.len();
 
         Response::build()
-            .raw_header("etag", MY_ETAG.to_string())
+            .raw_header("Etag", MY_ETAG.to_string())
             .raw_header("Content-Type", "text/plain; charset=utf-8")
             .sized_body(size, Cursor::new(body))
             .ok()
