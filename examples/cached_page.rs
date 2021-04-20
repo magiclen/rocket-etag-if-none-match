@@ -5,23 +5,20 @@ extern crate rocket_etag_if_none_match;
 
 extern crate chrono;
 
-extern crate once_cell;
-
+use std::borrow::Cow;
 use std::io::Cursor;
 
-use rocket_etag_if_none_match::{etag::EntityTag, EtagIfNoneMatch};
+use rocket_etag_if_none_match::{entity_tag::EntityTag, EtagIfNoneMatch};
 
 use rocket::http::Status;
 use rocket::response::{Response, Result};
 
-use once_cell::sync::Lazy;
-
 use chrono::prelude::*;
 
-static MY_ETAG: Lazy<EntityTag> = Lazy::new(|| EntityTag::new(true, "MAGIC"));
+static MY_ETAG: EntityTag = unsafe { EntityTag::new_unchecked(true, Cow::Borrowed("MAGIC")) };
 
 #[get("/")]
-fn index(etag_if_none_match: &EtagIfNoneMatch) -> Result<'static> {
+fn index(etag_if_none_match: EtagIfNoneMatch) -> Result<'static> {
     if etag_if_none_match.weak_eq(&MY_ETAG) {
         println!("Cached!");
         Response::build().status(Status::NotModified).ok()

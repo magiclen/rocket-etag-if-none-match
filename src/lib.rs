@@ -8,66 +8,53 @@ See `examples`.
 
 extern crate rocket;
 
-pub extern crate etag;
+pub extern crate entity_tag;
 
-use etag::EntityTag;
+use entity_tag::EntityTag;
 
 use rocket::outcome::Outcome;
 use rocket::request::{self, FromRequest, Request};
 
 /// The request guard used for getting `if-none-match` header.
 #[derive(Debug, Clone)]
-pub struct EtagIfNoneMatch {
-    pub etag: Option<EntityTag>,
+pub struct EtagIfNoneMatch<'r> {
+    pub etag: Option<EntityTag<'r>>,
 }
 
-macro_rules! impl_request_guard {
-    ($request:ident) => {
-        {
-            let raw_etag: Option<&str> = $request.headers().get("if-none-match").next(); // Only fetch the first one.
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for EtagIfNoneMatch<'r> {
+    type Error = ();
 
-            match raw_etag {
-                Some(raw_etag) => match raw_etag.parse::<EntityTag>() {
-                    Ok(etag) => {
-                        EtagIfNoneMatch {
-                            etag: Some(etag)
-                        }
-                    }
-                    Err(_) => {
-                        EtagIfNoneMatch {
-                            etag: None
-                        }
-                    }
-                }
-                None => {
-                    EtagIfNoneMatch {
-                        etag: None
-                    }
-                }
+    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
+        let raw_etag: Option<&str> = request.headers().get("if-none-match").next(); // Only fetch the first one.
+
+        let etag = raw_etag.map(|raw_etag| EntityTag::from_str(raw_etag).ok()).unwrap_or(None);
+
+        Outcome::Success(EtagIfNoneMatch {
+            etag,
+        })
+    }
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for &'r EtagIfNoneMatch<'r> {
+    type Error = ();
+
+    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
+        Outcome::Success(request.local_cache(|| {
+            let raw_etag: Option<&str> = request.headers().get("if-none-match").next(); // Only fetch the first one.
+
+            let etag =
+                raw_etag.map(|raw_etag| EntityTag::from_string(raw_etag).ok()).unwrap_or(None);
+
+            EtagIfNoneMatch {
+                etag,
             }
-        }
+        }))
     }
 }
 
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for EtagIfNoneMatch {
-    type Error = ();
-
-    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
-        Outcome::Success(impl_request_guard!(request))
-    }
-}
-
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for &'r EtagIfNoneMatch {
-    type Error = ();
-
-    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
-        Outcome::Success(request.local_cache(|| impl_request_guard!(request)))
-    }
-}
-
-impl EtagIfNoneMatch {
+impl<'r> EtagIfNoneMatch<'r> {
     /// For weak comparison two entity-tags are equivalent if their opaque-tags match character-by-character, regardless of either or both being tagged as "weak".
     pub fn weak_eq(&self, other_etag: &EntityTag) -> bool {
         match &self.etag {
