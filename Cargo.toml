@@ -12,13 +12,9 @@ readme = "README.md"
 license = "MIT"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 
-[badges.travis-ci]
-repository = "magiclen/rocket-etag-if-none-match"
-branch = "master"
-
 [dependencies]
 rocket = { git = "https://github.com/SergioBenitez/Rocket", version = "0.5.0-dev" }
-entity-tag = { git = "https://github.com/magiclen/entity-tag", version = "0.1.0" }
+entity-tag = "0.1"
 
 [dev-dependencies]
 chrono = "0.4.6"
