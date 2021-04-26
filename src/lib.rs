@@ -16,7 +16,7 @@ use rocket::outcome::Outcome;
 use rocket::request::{self, FromRequest, Request};
 
 /// The request guard used for getting `if-none-match` header.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct EtagIfNoneMatch<'r> {
     pub etag: Option<EntityTag<'r>>,
 }
