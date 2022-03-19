@@ -6,8 +6,6 @@ This crate provides a request guard used for getting `if-none-match` header.
 See `examples`.
 */
 
-extern crate rocket;
-
 pub extern crate entity_tag;
 
 use entity_tag::EntityTag;

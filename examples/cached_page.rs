@@ -1,10 +1,6 @@
 #[macro_use]
 extern crate rocket;
 
-extern crate rocket_etag_if_none_match;
-
-extern crate chrono;
-
 use std::borrow::Cow;
 use std::io::Cursor;
 

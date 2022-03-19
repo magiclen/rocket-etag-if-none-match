@@ -1,8 +1,8 @@
 [package]
 name = "rocket-etag-if-none-match"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["Magic Len <len@magiclen.org>"]
-edition = "2018"
+edition = "2021"
 repository = "https://github.com/magiclen/rocket-etag-if-none-match"
 homepage = "https://magiclen.org/rocket-etag-if-none-match"
 keywords = ["rocket", "server", "web", "etag", "http"]
