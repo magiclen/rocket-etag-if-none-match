@@ -9,9 +9,10 @@ See `examples`.
 pub extern crate entity_tag;
 
 use entity_tag::EntityTag;
-
-use rocket::outcome::Outcome;
-use rocket::request::{self, FromRequest, Request};
+use rocket::{
+    outcome::Outcome,
+    request::{self, FromRequest, Request},
+};
 
 /// The request guard used for getting `if-none-match` header.
 #[derive(Debug, Clone, Default)]

@@ -1,16 +1,15 @@
 #[macro_use]
 extern crate rocket;
 
-use std::borrow::Cow;
-use std::io::Cursor;
-
-use rocket_etag_if_none_match::{entity_tag::EntityTag, EtagIfNoneMatch};
-
-use rocket::http::Status;
-use rocket::request::Request;
-use rocket::response::{Responder, Response, Result};
+use std::{borrow::Cow, io::Cursor};
 
 use chrono::prelude::*;
+use rocket::{
+    http::Status,
+    request::Request,
+    response::{Responder, Response, Result},
+};
+use rocket_etag_if_none_match::{entity_tag::EntityTag, EtagIfNoneMatch};
 
 static MY_ETAG: EntityTag = unsafe { EntityTag::new_unchecked(true, Cow::Borrowed("MAGIC")) };
 
@@ -36,7 +35,11 @@ fn index(etag_if_none_match: EtagIfNoneMatch) -> MyResponse<'static> {
         println!("Cached!");
         Response::build().status(Status::NotModified).finalize().into()
     } else {
-        let body = format!("Current Time: {}\n\nTry to re-open this page repeatedly without pressing the forced-refresh(Ctrl+F5) button.", Utc::now().to_rfc3339());
+        let body = format!(
+            "Current Time: {}\n\nTry to re-open this page repeatedly without pressing the \
+             forced-refresh(Ctrl+F5) button.",
+            Utc::now().to_rfc3339()
+        );
 
         let size = body.len();
 
