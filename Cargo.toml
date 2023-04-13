@@ -9,7 +9,6 @@ homepage = "https://magiclen.org/rocket-etag-if-none-match"
 keywords = ["rocket", "server", "web", "etag", "http"]
 categories = ["web-programming"]
 description = "This crate provides a request guard used for getting `if-none-match` header."
-readme = "README.md"
 license = "MIT"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 
