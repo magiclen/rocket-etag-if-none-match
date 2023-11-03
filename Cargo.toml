@@ -1,9 +1,9 @@
 [package]
 name = "rocket-etag-if-none-match"
-version = "0.4.3"
+version = "0.4.4"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2021"
-rust-version = "1.67"
+rust-version = "1.69"
 repository = "https://github.com/magiclen/rocket-etag-if-none-match"
 homepage = "https://magiclen.org/rocket-etag-if-none-match"
 keywords = ["rocket", "server", "web", "etag", "http"]
@@ -13,7 +13,7 @@ license = "MIT"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 
 [dependencies]
-rocket = "0.5.0-rc.3"
+rocket = "0.5.0-rc.4"
 entity-tag = "0.1"
 
 [dev-dependencies]
