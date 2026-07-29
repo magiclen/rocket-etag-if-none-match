@@ -9,8 +9,9 @@ use rocket::{
     request::Request,
     response::{Responder, Response, Result},
 };
-use rocket_etag_if_none_match::{entity_tag::EntityTag, EtagIfNoneMatch};
+use rocket_etag_if_none_match::{EtagIfNoneMatch, entity_tag::EntityTag};
 
+// SAFETY: `MAGIC` is a valid unquoted entity-tag value. `new_unchecked` is the only constructor that can be called in a `static`.
 static MY_ETAG: EntityTag = unsafe { EntityTag::new_unchecked(true, Cow::Borrowed("MAGIC")) };
 
 struct MyResponse<'r>(Response<'r>);
