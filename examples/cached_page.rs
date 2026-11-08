@@ -32,9 +32,12 @@ impl<'r> From<Response<'r>> for MyResponse<'r> {
 
 #[get("/")]
 fn index(etag_if_none_match: EtagIfNoneMatch) -> MyResponse<'static> {
+    let mut response = Response::build();
+    response.raw_header(EntityTag::HEADER_NAME, MY_ETAG.to_string());
+
     if etag_if_none_match.weak_eq(&MY_ETAG) {
         println!("Cached!");
-        Response::build().status(Status::NotModified).finalize().into()
+        response.status(Status::NotModified);
     } else {
         let body = format!(
             "Current Time: {}\n\nTry to re-open this page repeatedly without pressing the \
@@ -44,13 +47,12 @@ fn index(etag_if_none_match: EtagIfNoneMatch) -> MyResponse<'static> {
 
         let size = body.len();
 
-        Response::build()
-            .raw_header("Etag", MY_ETAG.to_string())
+        response
             .raw_header("Content-Type", "text/plain; charset=utf-8")
-            .sized_body(size, Cursor::new(body))
-            .finalize()
-            .into()
+            .sized_body(size, Cursor::new(body));
     }
+
+    response.finalize().into()
 }
 
 #[launch]

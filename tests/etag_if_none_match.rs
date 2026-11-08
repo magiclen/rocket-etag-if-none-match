@@ -23,14 +23,16 @@ fn strong_etag() -> EntityTag<'static> {
 enum CachedPage {
     Fresh(&'static str, Header<'static>),
     #[response(status = 304)]
-    NotModified(()),
+    NotModified((), Header<'static>),
 }
 
 fn cached_page(etag: &EntityTag<'_>, matched: bool) -> CachedPage {
+    let header = Header::new(EntityTag::HEADER_NAME, etag.to_string());
+
     if matched {
-        CachedPage::NotModified(())
+        CachedPage::NotModified((), header)
     } else {
-        CachedPage::Fresh("Hello world!", Header::new(EntityTag::HEADER_NAME, etag.to_string()))
+        CachedPage::Fresh("Hello world!", header)
     }
 }
 
@@ -84,7 +86,10 @@ fn a_request_without_the_header_gets_the_resource() {
 fn a_matching_entity_tag_revalidates_the_cache() {
     let client = Client::tracked(rocket_with_routes()).unwrap();
 
-    assert_eq!((Status::NotModified, None), get(&client, "/weak", Some(r#"W/"MAGIC""#)));
+    assert_eq!(
+        (Status::NotModified, Some(r#"W/"MAGIC""#.to_string())),
+        get(&client, "/weak", Some(r#"W/"MAGIC""#))
+    );
 }
 
 // An entity-tag of another resource does not revalidate anything.
@@ -103,8 +108,14 @@ fn a_different_entity_tag_does_not_match() {
 fn the_two_comparison_functions_treat_the_weakness_indicator_differently() {
     let client = Client::tracked(rocket_with_routes()).unwrap();
 
-    assert_eq!((Status::NotModified, None), get(&client, "/weak", Some(r#""MAGIC""#)));
-    assert_eq!((Status::NotModified, None), get(&client, "/strong", Some(r#""MAGIC""#)));
+    assert_eq!(
+        (Status::NotModified, Some(r#"W/"MAGIC""#.to_string())),
+        get(&client, "/weak", Some(r#""MAGIC""#))
+    );
+    assert_eq!(
+        (Status::NotModified, Some(r#""MAGIC""#.to_string())),
+        get(&client, "/strong", Some(r#""MAGIC""#))
+    );
 
     assert_eq!(
         (Status::Ok, Some(r#""MAGIC""#.to_string())),
@@ -118,7 +129,7 @@ fn a_list_matches_when_any_of_its_members_does() {
     let client = Client::tracked(rocket_with_routes()).unwrap();
 
     assert_eq!(
-        (Status::NotModified, None),
+        (Status::NotModified, Some(r#"W/"MAGIC""#.to_string())),
         get(&client, "/weak", Some(r#""OTHER", W/"MAGIC", "ANOTHER""#))
     );
 
@@ -128,13 +139,47 @@ fn a_list_matches_when_any_of_its_members_does() {
     );
 }
 
+// The header may be split into several lines, and a match in any line is enough.
+#[test]
+fn a_match_in_a_later_header_line_revalidates_the_cache() {
+    let client = Client::tracked(rocket_with_routes()).unwrap();
+
+    let response = client
+        .get("/weak")
+        .header(Header::new("if-none-match", r#""OTHER""#))
+        .header(Header::new("if-none-match", r#"W/"MAGIC""#))
+        .dispatch();
+
+    assert_eq!(
+        (Status::NotModified, Some(r#"W/"MAGIC""#)),
+        (response.status(), response.headers().get_one("ETag"))
+    );
+}
+
+// A list without a comma between its members is invalid, so it is ignored as a whole.
+#[test]
+fn a_missing_comma_makes_the_whole_list_invalid() {
+    let client = Client::tracked(rocket_with_routes()).unwrap();
+
+    assert_eq!(
+        (Status::Ok, Some(r#"W/"MAGIC""#.to_string())),
+        get(&client, "/weak", Some(r#""MAGIC" "OTHER""#))
+    );
+}
+
 // `*` matches whatever representation the server currently has.
 #[test]
 fn an_asterisk_matches_the_current_representation() {
     let client = Client::tracked(rocket_with_routes()).unwrap();
 
-    assert_eq!((Status::NotModified, None), get(&client, "/weak", Some("*")));
-    assert_eq!((Status::NotModified, None), get(&client, "/strong", Some("*")));
+    assert_eq!(
+        (Status::NotModified, Some(r#"W/"MAGIC""#.to_string())),
+        get(&client, "/weak", Some("*"))
+    );
+    assert_eq!(
+        (Status::NotModified, Some(r#""MAGIC""#.to_string())),
+        get(&client, "/strong", Some("*"))
+    );
 }
 
 // The borrowed guard answers the same request the same way, out of one cached value.
@@ -142,7 +187,10 @@ fn an_asterisk_matches_the_current_representation() {
 fn the_borrowed_guard_answers_the_same_way() {
     let client = Client::tracked(rocket_with_routes()).unwrap();
 
-    assert_eq!((Status::NotModified, None), get(&client, "/borrowed", Some(r#""MAGIC""#)));
+    assert_eq!(
+        (Status::NotModified, Some(r#"W/"MAGIC""#.to_string())),
+        get(&client, "/borrowed", Some(r#""MAGIC""#))
+    );
     assert_eq!(
         (Status::Ok, Some(r#"W/"MAGIC""#.to_string())),
         get(&client, "/borrowed", Some(r#""OTHER""#))
